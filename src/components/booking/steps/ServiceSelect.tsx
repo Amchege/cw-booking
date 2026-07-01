@@ -8,7 +8,6 @@ interface Props {
   onChange: (ids: number[]) => void;
 }
 
-// Consistent colors for category headers (mimics getCategoryColor)
 const CATEGORY_COLORS = [
   { left: 'border-l-blue-500', text: 'text-blue-600', row: 'bg-blue-50' },
   { left: 'border-l-green-500', text: 'text-green-600', row: 'bg-green-50' },
@@ -18,9 +17,9 @@ const CATEGORY_COLORS = [
   { left: 'border-l-teal-500', text: 'text-teal-600', row: 'bg-teal-50' },
 ];
 
-function getCategoryColor(cat: string) {
+function getCategoryColor(name: string) {
   let hash = 0;
-  for (let i = 0; i < cat.length; i++) hash = cat.charCodeAt(i) + ((hash << 5) - hash);
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return CATEGORY_COLORS[Math.abs(hash) % CATEGORY_COLORS.length];
 }
 
@@ -31,8 +30,7 @@ function formatKES(amount: number) {
 export function ServiceSelect({ services, selected, errors, onChange }: Props) {
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
 
-  // Group services by category
-     const grouped = useMemo(() => {
+  const grouped = useMemo(() => {
     const map: Record<string, PublicService[]> = {};
     services.forEach((s) => {
       const catName = s.category || s.serviceCategory?.name || 'Other';
@@ -42,13 +40,11 @@ export function ServiceSelect({ services, selected, errors, onChange }: Props) {
     return map;
   }, [services]);
 
-  // Open all categories by default on first load
-  
-  function toggleCategory(cat: string) {
+  function toggleCategory(catName: string) {
     setOpenCategories((prev) => {
       const next = new Set(prev);
-      if (next.has(cat)) next.delete(cat);
-      else next.add(cat);
+      if (next.has(catName)) next.delete(catName);
+      else next.add(catName);
       return next;
     });
   }
@@ -61,7 +57,7 @@ export function ServiceSelect({ services, selected, errors, onChange }: Props) {
     }
   }
 
-  function selectAllInCategory(cat: string, catServices: PublicService[]) {
+  function selectAllInCategory(catName: string, catServices: PublicService[]) {
     const allSelected = catServices.every((s) => selected.includes(s.id));
     if (allSelected) {
       const idsToRemove = new Set(catServices.map((s) => s.id));
@@ -86,7 +82,7 @@ export function ServiceSelect({ services, selected, errors, onChange }: Props) {
       )}
 
       <div className="mt-5 space-y-4">
-                {Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([category, catServices]) => {
+        {Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([category, catServices]) => {
           const isOpen = openCategories.has(category);
           const color = getCategoryColor(category);
           const allSelected = catServices.every((s) => selected.includes(s.id));
@@ -94,7 +90,6 @@ export function ServiceSelect({ services, selected, errors, onChange }: Props) {
 
           return (
             <div key={category} className="border border-gray-100 rounded-xl overflow-hidden">
-              {/* Category Header */}
               <button
                 type="button"
                 onClick={() => toggleCategory(category)}
@@ -126,7 +121,6 @@ export function ServiceSelect({ services, selected, errors, onChange }: Props) {
                 </span>
               </button>
 
-              {/* Services List */}
               {isOpen && (
                 <div className="divide-y divide-gray-50 p-2">
                   {catServices.map((svc) => {
