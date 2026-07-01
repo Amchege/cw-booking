@@ -36,9 +36,9 @@ export function ServiceSelect({ services, selected, errors, onChange }: Props) {
     const map: Record<string, PublicService[]> = {};
     services.forEach((s) => {
       // Fallback: use text field first, then relation name, then 'Other'
-      const cat = s.category || s.serviceCategory?.name || 'Other';
-      if (!map[cat]) map[cat] = [];
-      map[cat].push(s);
+      const catName = s.category || s.serviceCategory?.name || 'Other';
+      if (!map[catName]) map[catName] = [];
+      map[catName].push(s);
     });
     return map;
   }, [services]);

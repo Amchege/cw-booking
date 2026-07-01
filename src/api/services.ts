@@ -1,4 +1,4 @@
-import { api } from './client';
+import api from './client';
 import type { PublicService } from '../types/booking';
 
 export async function fetchServices(): Promise<PublicService[]> {

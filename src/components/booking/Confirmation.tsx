@@ -1,5 +1,3 @@
-import type { BookingResponse } from '../../types/booking';
-
 interface BookingData {
   reference: string;
   scheduledDate: string;

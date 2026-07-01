@@ -1,4 +1,4 @@
-import { api } from './client';
+import api from './client';
 import type { BookingFormData, BookingResponse } from '../types/booking';
 
 export async function createBooking(
