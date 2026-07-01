@@ -32,10 +32,9 @@ export function ServiceSelect({ services, selected, errors, onChange }: Props) {
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
 
   // Group services by category
-    const grouped = useMemo(() => {
+     const grouped = useMemo(() => {
     const map: Record<string, PublicService[]> = {};
     services.forEach((s) => {
-      // Fallback: use text field first, then relation name, then 'Other'
       const catName = s.category || s.serviceCategory?.name || 'Other';
       if (!map[catName]) map[catName] = [];
       map[catName].push(s);
