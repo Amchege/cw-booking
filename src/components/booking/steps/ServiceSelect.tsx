@@ -57,7 +57,7 @@ export function ServiceSelect({ services, selected, errors, onChange }: Props) {
     }
   }
 
-  function selectAllInCategory(catName: string, catServices: PublicService[]) {
+    function selectAllInCategory(catServices: PublicService[]) {
     const allSelected = catServices.every((s) => selected.includes(s.id));
     if (allSelected) {
       const idsToRemove = new Set(catServices.map((s) => s.id));
@@ -113,7 +113,7 @@ export function ServiceSelect({ services, selected, errors, onChange }: Props) {
                 <span
                   onClick={(e) => {
                     e.stopPropagation();
-                    selectAllInCategory(category, catServices);
+                  selectAllInCategory(catServices);
                   }}
                   className={`text-xs font-medium hover:underline cursor-pointer ${color.text} opacity-80 hover:opacity-100`}
                 >
