@@ -10,7 +10,6 @@ interface Props {
 
 // Operating hours — in production, fetch from backend or config
 const OPEN_HOUR = 8;
-const CLOSE_HOUR = 18;
 const SLOT_INTERVAL = 30; // minutes
 
 export function DateTimePick({ form, errors, onChange }: Props) {
