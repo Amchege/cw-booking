@@ -5,9 +5,9 @@ export const bookingFormSchema = z.object({
   serviceIds: z.array(z.number().int()).min(1, 'Select at least one service'),
 
   vehicleType: z.string().optional().default(''),
-  vehicleMake: z.string().min(1, 'Required').max(50),
-  vehicleModel: z.string().min(1, 'Required').max(50),
-  vehicleColor: z.string().min(1, 'Required').max(30),
+  vehicleMake: z.string().max(50).optional().default(''),
+  vehicleModel: z.string().max(50).optional().default(''),
+  vehicleColor: z.string().max(30).optional().default(''),
   vehiclePlate: z.string().max(15).optional().default(''),
 
   customerName: z.string().min(2, 'At least 2 characters').max(100),

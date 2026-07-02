@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { BookingFormData } from '../../../types/booking';
+import api from '../../../api/client';
 
 interface Props {
   form: BookingFormData;
@@ -9,10 +10,13 @@ interface Props {
 
 // Operating hours — in production, fetch from backend or config
 const OPEN_HOUR = 8;
-const CLOSE_HOUR = 17;
+const CLOSE_HOUR = 18;
 const SLOT_INTERVAL = 30; // minutes
 
 export function DateTimePick({ form, errors, onChange }: Props) {
+  const [availability, setAvailability] = useState<{ counts: Record<string, number>; maxCapacity: number } | null>(null);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+
   // Generate next 14 available dates (skip past days and Sundays)
   const availableDates = useMemo(() => {
     const dates: string[] = [];
@@ -27,16 +31,39 @@ export function DateTimePick({ form, errors, onChange }: Props) {
     return dates;
   }, []);
 
-  // Generate time slots
+    // Generate time slots (Strictly up to 6:00 PM)
   const timeSlots = useMemo(() => {
     const slots: string[] = [];
-    for (let h = OPEN_HOUR; h < CLOSE_HOUR; h++) {
+    const END_HOUR = 18; // 6:00 PM
+    for (let h = OPEN_HOUR; h <= END_HOUR; h++) {
       for (let m = 0; m < 60; m += SLOT_INTERVAL) {
+        // Stop exactly at 18:00, don't generate 18:30
+        if (h === END_HOUR && m > 0) break; 
         slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
       }
     }
     return slots;
   }, []);
+
+  // Fetch availability when date changes
+  useEffect(() => {
+    if (!form.scheduledDate) return;
+    let cancelled = false;
+    setLoadingSlots(true);
+    
+    api.get(`/availability?date=${form.scheduledDate}`)
+      .then((res) => {
+        if (!cancelled) setAvailability(res.data.data);
+      })
+      .catch(() => {
+        if (!cancelled) setAvailability(null); // Fallback to allowing all if API fails
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingSlots(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [form.scheduledDate]);
 
   function formatDateLabel(dateStr: string): string {
     const d = new Date(dateStr + 'T00:00:00');
@@ -72,6 +99,7 @@ export function DateTimePick({ form, errors, onChange }: Props) {
                 onChange('scheduledDate', date);
                 // Reset time if date changes
                 onChange('scheduledTime', '');
+                setAvailability(null); // Clear old availability data
               }}
               className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition ${
                 form.scheduledDate === date
@@ -90,22 +118,41 @@ export function DateTimePick({ form, errors, onChange }: Props) {
         <div className="mt-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Time <span className="text-red-500">*</span>
+            {loadingSlots && <span className="ml-2 text-xs font-normal text-gray-400">Checking availability...</span>}
           </label>
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-            {timeSlots.map((time) => (
-              <button
-                key={time}
-                type="button"
-                onClick={() => onChange('scheduledTime', time)}
-                className={`rounded-lg border-2 px-3 py-2 text-center text-sm font-medium transition ${
-                  form.scheduledTime === time
-                    ? 'border-brand-600 bg-brand-50 text-brand-700'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                }`}
-              >
-                {formatTimeLabel(time)}
-              </button>
-            ))}
+            {timeSlots.map((time) => {
+              const currentCount = availability?.counts[time] || 0;
+              const isFull = availability ? currentCount >= availability.maxCapacity : false;
+              
+              // Check if the time slot is in the past for today
+              const now = new Date();
+              const isToday = form.scheduledDate === now.toISOString().split('T')[0];
+              const [h, m] = time.split(':').map(Number);
+              const slotMinutes = h * 60 + m;
+              const nowMinutes = now.getHours() * 60 + now.getMinutes();
+              const isPast = isToday && slotMinutes <= nowMinutes;
+
+              const isDisabled = isFull || isPast;
+
+              return (
+                <button
+                  key={time}
+                  type="button"
+                  disabled={isDisabled}
+                  onClick={() => onChange('scheduledTime', time)}
+                  className={`rounded-lg border-2 px-3 py-2 text-center text-sm font-medium transition ${
+                    isDisabled
+                      ? 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed line-through'
+                      : form.scheduledTime === time
+                      ? 'border-brand-600 bg-brand-50 text-brand-700'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  {formatTimeLabel(time)}
+                </button>
+              );
+            })}
           </div>
           {errors.scheduledTime && <p className="mt-1 text-xs text-red-600">{errors.scheduledTime}</p>}
         </div>

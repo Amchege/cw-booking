@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BookingWizard } from './components/booking/BookingWizard';
+import { StatusCheck } from './components/booking/StatusCheck';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,16 +38,16 @@ export default function App() {
         <main>
           <div className="mx-auto max-w-4xl px-4 py-8">
             <div className="text-center">
-              <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-                Book Your Car Wash
+            <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
+                {isStatusPage ? 'Check Booking Status' : 'Book Your Car Wash'}
               </h1>
               <p className="mt-2 text-gray-500">
-                Choose your services, pick a time, and we'll handle the rest.
+                {isStatusPage ? 'Enter your reference code to see your appointment status.' : 'Choose your services, pick a time, and we\'ll handle the rest.'}
               </p>
             </div>
           </div>
 
-          <BookingWizard />
+        {isStatusPage ? <StatusCheck /> : <BookingWizard />}
         </main>
 
         {/* Footer */}
@@ -59,3 +60,4 @@ export default function App() {
     </QueryClientProvider>
   );
 }
+  const isStatusPage = new URLSearchParams(window.location.search).has('ref');
