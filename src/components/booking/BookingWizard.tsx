@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { BookingFormData, BookingResponse, ApiError } from '../../types/booking';
 import { useServices } from '../../hooks/useServices';
 import { useCreateBooking } from '../../hooks/useCreateBooking';
@@ -39,6 +39,19 @@ export function BookingWizard() {
   const { data: services, isLoading: servicesLoading } = useServices();
   const createBooking = useCreateBooking();
 
+    // Check if selected services are ONLY carpets (vehicle info not needed)
+  const selectedServicesData = useMemo(() => {
+    if (!services) return [];
+    return services.filter((s) => form.serviceIds.includes(s.id));
+  }, [services, form.serviceIds]);
+
+  const isOnlyCarpets = useMemo(() => {
+    if (selectedServicesData.length === 0) return false;
+    return selectedServicesData.every(
+      (s) => (s.category || s.serviceCategory?.name || '') === 'Carpets'
+    );
+  }, [selectedServicesData]);
+
   function updateField<K extends keyof BookingFormData>(
     key: K,
     value: BookingFormData[K]
@@ -53,19 +66,29 @@ export function BookingWizard() {
     setApiError(null);
   }
 
-  function goNext() {
+    function goNext() {
     const stepErrors = validateStep(form, step);
     if (Object.keys(stepErrors).length > 0) {
       setErrors(stepErrors);
       return;
     }
     setErrors({});
+    // Skip vehicle step if only carpets are selected
+    if (step === 1 && isOnlyCarpets) {
+      setStep(3);
+      return;
+    }
     setStep((s) => Math.min(s + 1, STEPS.length));
   }
-
-  function goBack() {
+  
+    function goBack() {
     setErrors({});
     setApiError(null);
+    // If we skipped vehicle step, go back to services
+    if (step === 3 && isOnlyCarpets) {
+      setStep(1);
+      return;
+    }
     setStep((s) => Math.max(s - 1, 1));
   }
 
@@ -107,13 +130,14 @@ export function BookingWizard() {
           <DateTimePick form={form} errors={errors} onChange={updateField} />
         )}
         {step === 5 && services && (
-          <ReviewSubmit
-            form={form}
-            services={services}
-            onSubmit={handleSubmit}
-            isSubmitting={createBooking.isPending}
-          />
-        )}
+            <ReviewSubmit
+              form={form}
+              services={services}
+              onSubmit={handleSubmit}
+              isSubmitting={createBooking.isPending}
+              skipVehicle={isOnlyCarpets}
+            />
+          )}
 
         {/* API-level error banner */}
         {apiError && (

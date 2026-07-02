@@ -6,9 +6,10 @@ interface Props {
   services: PublicService[];
   onSubmit: () => void;
   isSubmitting: boolean;
+  skipVehicle?: boolean;
 }
 
-export function ReviewSubmit({ form, services, onSubmit, isSubmitting }: Props) {
+export function ReviewSubmit({ form, services, onSubmit, isSubmitting, skipVehicle = false }: Props) {
   const { data: attendants } = useAttendants();
   const selectedAttendant = attendants?.find((a) => a.id === form.preferredAttendantId);
 
@@ -54,16 +55,18 @@ export function ReviewSubmit({ form, services, onSubmit, isSubmitting }: Props) 
           </div>
         </section>
 
-        {/* Vehicle */}
-        <section>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Vehicle</h3>
-          <p className="mt-1 text-sm text-gray-800">
-            {form.vehicleColor} {form.vehicleMake} {form.vehicleModel}
-            {form.vehiclePlate && (
-              <span className="text-gray-400"> — {form.vehiclePlate}</span>
-            )}
-          </p>
-        </section>
+        {/* Vehicle - Hidden for Carpets */}
+        {!skipVehicle && (
+          <section>
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Vehicle</h3>
+            <p className="mt-1 text-sm text-gray-800">
+              {form.vehicleColor} {form.vehicleMake} {form.vehicleModel}
+              {form.vehiclePlate && (
+                <span className="text-gray-400"> — {form.vehiclePlate}</span>
+              )}
+            </p>
+          </section>
+        )}
 
         {/* Contact */}
         <section>

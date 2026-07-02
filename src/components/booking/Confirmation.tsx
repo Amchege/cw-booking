@@ -67,7 +67,7 @@ export function Confirmation({ data }: Props) {
             {data.services.map((s, i) => (
               <div key={i} className="flex justify-between py-0.5">
                 <span className="text-gray-600">{s.name}</span>
-                <span className="text-gray-900">${s.price.toFixed(2)}</span>
+                                <span className="text-gray-900">KES {s.price.toLocaleString()}</span>
               </div>
             ))}
           </div>
